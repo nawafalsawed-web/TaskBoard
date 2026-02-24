@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المهام اليومية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Changa:wght@400;600;700;800&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start:#f0faf0;--bg-gradient-end:#e8f5e8;--card-bg:#c8f5d8;
+            --accent-purple:#5b2d8e;--accent-green-dark:#2d5a3d;
+            --text-dark:#1a1a2e;--text-muted:#4a4a6a;
+            --shadow-card:0 4px 24px rgba(91,45,142,0.08);
+            --progress-bg:rgba(91,45,142,0.1);
+            --progress-low:#e74c3c;--progress-mid:#f39c12;--progress-high:#27ae60;--progress-full:#2ecc71;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,var(--bg-gradient-start) 0%,#f5fef5 30%,var(--bg-gradient-end) 70%,#e0f0e0 100%);min-height:100vh;color:var(--text-dark);overflow-x:hidden}
+        .container{display:grid;grid-template-columns:1fr 1.8fr;min-height:100vh}
+        .left-panel{display:flex;flex-direction:column;justify-content:center;padding:3rem 2.5rem;background:linear-gradient(180deg,#e8f8e8 0%,#d4ecd4 40%,#c8e0c8 100%);position:relative;overflow:hidden}
+        .left-panel::before{content:'';position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 50%,rgba(91,45,142,0.03) 0%,transparent 60%);pointer-events:none}
+        .logo-area{position:absolute;top:1.5rem;right:1.5rem;width:140px;height:140px;background:#c0392b;border-radius:20px 20px 0 20px;display:flex;align-items:center;justify-content:center;color:white;font-family:'Changa',sans-serif;font-weight:800;font-size:1.3rem;text-align:center;line-height:1.4;box-shadow:0 8px 30px rgba(192,57,43,0.4)}
+        .conn-status{position:fixed;top:1rem;left:1rem;display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.8rem;border-radius:50px;font-size:0.75rem;font-weight:600;z-index:100}
+        .conn-status.on{background:rgba(52,211,153,0.15);color:#059669;border:1px solid rgba(52,211,153,0.3)}
+        .conn-status.off{background:rgba(239,68,68,0.15);color:#dc2626;border:1px solid rgba(239,68,68,0.3)}
+        .conn-status .dot{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite}
+        .conn-status.on .dot{background:#059669}.conn-status.off .dot{background:#dc2626}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+        .quote-section{position:relative;z-index:1}
+        .quote-title{font-family:'Changa',sans-serif;font-weight:800;font-size:clamp(2rem,4vw,3.2rem);color:var(--accent-green-dark);line-height:1.4;margin-bottom:1.5rem}
+        .quote-author{font-family:'Aref Ruqaa',serif;font-size:1.3rem;color:var(--accent-purple);margin-bottom:2rem;padding:0.3rem 1rem;background:rgba(91,45,142,0.08);display:inline-block;border-radius:4px}
+        .quote-text{font-family:'Tajawal',sans-serif;font-size:1.05rem;line-height:2;color:var(--text-dark);max-width:500px;position:relative;padding:1.5rem;background:rgba(255,255,255,0.4);border-radius:12px;border:1px solid rgba(91,45,142,0.06)}
+        .quote-text::before{content:'\00AB';font-size:3rem;color:var(--accent-purple);opacity:0.3;position:absolute;top:-0.2rem;right:0.5rem;font-family:'Aref Ruqaa',serif}
+        .date-bar{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1rem 2.5rem;background:rgba(255,255,255,0.5);border-top:1px solid rgba(91,45,142,0.08)}
+        .date-hijri{font-weight:700;color:var(--accent-purple);font-size:1rem}
+        .date-hijri-year{font-weight:600;color:var(--text-muted);font-size:1rem}
+        .date-gregorian{font-weight:600;color:var(--accent-green-dark);font-size:1rem;letter-spacing:1px;text-transform:uppercase}
+        .right-panel{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1.2rem;padding:1.5rem;overflow:hidden}
+        .task-card{background:var(--card-bg);border-radius:16px;padding:1.2rem 1.5rem;display:flex;flex-direction:column;overflow:hidden;position:relative;border:1px solid rgba(91,45,142,0.06);box-shadow:var(--shadow-card)}
+        .task-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent-purple),transparent);opacity:0.3;border-radius:16px 16px 0 0}
+        .card-header{text-align:center;margin-bottom:0.8rem;padding-bottom:0.6rem;border-bottom:2px solid rgba(91,45,142,0.1)}
+        .card-title{font-family:'Changa',sans-serif;font-weight:800;font-size:1.3rem;color:var(--accent-purple)}
+        .task-list{flex:1;display:flex;flex-direction:column;gap:0.5rem;overflow-y:auto}
+        .task-list::-webkit-scrollbar{width:3px}.task-list::-webkit-scrollbar-thumb{background:rgba(91,45,142,0.2);border-radius:3px}
+
+        .task-item{display:flex;flex-direction:column;gap:0.3rem;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.35);border-radius:8px;border-bottom:1px solid rgba(91,45,142,0.05)}
+        .task-item:hover{background:rgba(255,255,255,0.6)}
+        .task-item.completed{opacity:0.6}
+        .task-item.completed .task-name{text-decoration:line-through}
+        .task-top{display:flex;align-items:center;gap:0.5rem}
+        .task-name{flex:1;font-size:0.9rem;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .progress-wrapper{display:flex;align-items:center;gap:0.4rem;min-width:80px;direction:ltr}
+        .progress-bar-bg{flex:1;height:5px;background:var(--progress-bg);border-radius:10px;overflow:hidden}
+        .progress-bar-fill{height:100%;border-radius:10px;transition:width 0.6s ease;position:relative}
+        .progress-bar-fill.low{background:linear-gradient(90deg,#e74c3c,#e67e22)}
+        .progress-bar-fill.mid{background:linear-gradient(90deg,#f39c12,#e67e22)}
+        .progress-bar-fill.high{background:linear-gradient(90deg,#27ae60,#2ecc71)}
+        .progress-bar-fill.full{background:linear-gradient(90deg,#2ecc71,#27ae60)}
+        .progress-bar-fill.full::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:shimmer 2s infinite}
+        @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+        .progress-percent{font-size:0.65rem;font-weight:700;min-width:24px;text-align:left}
+        .progress-percent.low{color:var(--progress-low)}.progress-percent.mid{color:var(--progress-mid)}.progress-percent.high{color:var(--progress-high)}.progress-percent.full{color:var(--progress-full)}
+
+        .task-meta{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+        .task-assignee{font-size:0.7rem;color:var(--accent-purple);background:rgba(91,45,142,0.08);padding:0.15rem 0.5rem;border-radius:50px;display:inline-flex;align-items:center;gap:0.2rem;white-space:nowrap}
+        .task-assignee::before{content:'👤';font-size:0.6rem}
+        .task-status{font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:50px;font-weight:700;white-space:nowrap}
+        .task-status.done{background:#1a6b3c;color:#fff;border:none;border-radius:6px}
+        .task-status.in-progress{background:#c4b44e;color:#1a1a2e;border:none;border-radius:6px}
+        .task-status.delayed{background:#d42e2e;color:#fff;border:none;border-radius:6px}
+        .task-status.paused{background:#c8a2e0;color:#2e0854;border:none;border-radius:6px}
+        .task-status.no-updates{background:#555;color:#fff;border:none;border-radius:6px}
+
+        .empty-state{color:var(--text-muted);text-align:center;font-size:0.9rem;opacity:0.6;padding:2rem 0}
+        .loading-overlay{position:fixed;inset:0;background:rgba(240,250,240,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s}
+        .loading-overlay.hidden{opacity:0;pointer-events:none}
+        .loading-spinner{width:40px;height:40px;border:4px solid rgba(91,45,142,0.15);border-top-color:var(--accent-purple);border-radius:50%;animation:spin 0.8s linear infinite}
+        .loading-text{margin-top:1rem;font-family:'Changa',sans-serif;color:var(--accent-purple);font-weight:700}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .task-card{animation:fadeInUp 0.6s ease forwards}
+        .task-card:nth-child(1){animation-delay:0.1s}.task-card:nth-child(2){animation-delay:0.2s}.task-card:nth-child(3){animation-delay:0.3s}.task-card:nth-child(4){animation-delay:0.4s}
+        .quote-section{animation:fadeInUp 0.8s ease 0.3s forwards;opacity:0}
+
+        @media(max-width:1024px){.container{grid-template-columns:1fr;grid-template-rows:auto auto}.left-panel{padding:2rem 1.5rem;padding-bottom:4rem;min-height:auto}.right-panel{grid-template-columns:1fr 1fr;padding:1rem;gap:1rem}.quote-title{font-size:2rem}}
+        @media(max-width:768px){
+            .left-panel{padding:1.5rem 1.2rem;padding-top:5rem;padding-bottom:4rem}
+            .logo-area{top:1rem;right:1rem;width:100px;height:100px;font-size:0.95rem;border-radius:16px 16px 0 16px}
+            .quote-title{font-size:1.6rem;margin-bottom:1rem}.quote-author{font-size:1.1rem;margin-bottom:1.2rem}
+            .quote-text{font-size:0.92rem;line-height:1.8;padding:1rem}
+            .date-bar{padding:0.8rem 1.2rem;flex-wrap:wrap;gap:0.3rem;justify-content:center}
+            .date-hijri,.date-hijri-year,.date-gregorian{font-size:0.85rem}
+            .right-panel{grid-template-columns:1fr;padding:1rem;gap:1rem;overflow:visible}
+            .task-card{padding:1rem;border-radius:12px}.card-title{font-size:1.15rem}
+            .task-name{font-size:0.85rem}.progress-wrapper{min-width:70px}
+            .conn-status{top:0.5rem;left:0.5rem;font-size:0.65rem;padding:0.3rem 0.6rem}
+        }
+        @media(max-width:400px){
+            .left-panel{padding:1rem;padding-top:4.5rem;padding-bottom:3.5rem}
+            .logo-area{width:80px;height:80px;font-size:0.8rem}
+            .quote-title{font-size:1.35rem}.quote-text{font-size:0.85rem;padding:0.8rem}
+            .right-panel{padding:0.7rem;gap:0.7rem}.task-card{padding:0.8rem}
+            .card-title{font-size:1.05rem}.task-name{font-size:0.8rem}
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
+    <div class="conn-status off" id="cs"><span class="dot"></span><span id="ct">جاري الاتصال...</span></div>
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo-area"><span>صُنع<br>في<br>أهداف</span></div>
+            <div class="quote-section">
+                <h1 class="quote-title" id="quoteTitle"></h1>
+                <div class="quote-author" id="quoteAuthor"></div>
+                <p class="quote-text" id="quoteText"></p>
+            </div>
+            <div class="date-bar">
+                <span class="date-hijri" id="dateHijri"></span>
+                <span class="date-hijri-year" id="dateHijriYear"></span>
+                <span class="date-gregorian" id="dateGregorian"></span>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="task-card" id="card-project-management"><div class="card-header"><h2 class="card-title">إدارة المشاريع</h2></div><div class="task-list" id="tasks-project-management"></div></div>
+            <div class="task-card" id="card-influencers"><div class="card-header"><h2 class="card-title">المؤثرين</h2></div><div class="task-list" id="tasks-influencers"></div></div>
+            <div class="task-card" id="card-public-relations"><div class="card-header"><h2 class="card-title">العلاقات العامة</h2></div><div class="task-list" id="tasks-public-relations"></div></div>
+            <div class="task-card" id="card-production"><div class="card-header"><h2 class="card-title">الإنتاج</h2></div><div class="task-list" id="tasks-production"></div></div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        firebase.initializeApp({apiKey:"AIzaSyCiyb2ApY6K3YeNdeC6C8wjmWSeNYTZ03E",authDomain:"taskboard-ahdaf.firebaseapp.com",databaseURL:"https://taskboard-ahdaf-default-rtdb.europe-west1.firebasedatabase.app",projectId:"taskboard-ahdaf",storageBucket:"taskboard-ahdaf.firebasestorage.app",messagingSenderId:"576532765761",appId:"1:576532765761:web:33a0cc6888dd229e81fac0"});
+        var db=firebase.database(),dataRef=db.ref('taskboard');
+        var statusLabels={'done':'مكتملة','in-progress':'قيد التنفيذ','delayed':'مؤجلة','paused':'متوقفة','no-updates':'لايوجد تحديثات'};
+        var DEFAULT_DATA={sections:{"project-management":{title:"إدارة المشاريع",tasks:[{name:"متابعة جازي",progress:0,assignee:"",status:""},{name:"اقفال حملة دولاتو",progress:0,assignee:"",status:""},{name:"متابعة عمل يلو مع المؤثرين",progress:0,assignee:"",status:""},{name:"متابعة حملة فرشلي مع المؤثرين",progress:0,assignee:"",status:""}]},"influencers":{title:"المؤثرين",tasks:[{name:"عرض سعر ديل بالاسعار الداخليه",progress:0,assignee:"",status:""},{name:"ملف كنتاكي",progress:0,assignee:"",status:""},{name:"اعلانات جازي",progress:0,assignee:"",status:""},{name:"تعديلات فرشلي",progress:0,assignee:"",status:""},{name:"تعميدات سلك",progress:0,assignee:"",status:""},{name:"متابعه سهم نشر اعلان يلو",progress:0,assignee:"",status:""},{name:"رسيس ملف",progress:0,assignee:"",status:""},{name:"سيمفوني مقترحات",progress:0,assignee:"",status:""},{name:"دولاتو تعديلات",progress:0,assignee:"",status:""}]},"public-relations":{title:"العلاقات العامة",tasks:[{name:"نشر لينكدن",progress:0,assignee:"",status:""},{name:"خطة المحتوى",progress:0,assignee:"",status:""}]},"production":{title:"الإنتاج",tasks:[{name:"جدولة تصوير مستهدفات يلو",progress:0,assignee:"",status:""},{name:"العمل على تصميم قوالب محمدز",progress:0,assignee:"",status:""},{name:"تعديلات موجز",progress:0,assignee:"",status:""},{name:"تعديلات يلو",progress:0,assignee:"",status:""},{name:"عرض سعر العربة النادرة",progress:0,assignee:"",status:""},{name:"جدولة نشر فيديوهات موجز",progress:0,assignee:"",status:""}]}},quote:{title:"حين تتحوّل كثرة الخيارات إلى عبء",author:"محمد الحاجي",text:"وجدت إحدى الدراسات أن الأشخاص الذين توفّرت لهم مسارات مهنية كثيرة يعيشون قلق أعلى ورضا منخفض. مقارنةً بأصحاب الخيارات الأقل، فالتضخم بالخيارات لا يمنحنا الحريّة الموعودة، بل يولد لدينا حالة تشبه شلل القرار."},date:{hijri:"الإثنين - ٢٨ - شعبان",hijriYear:"١٤٤٧ / 2026",gregorian:"MON - 16 - FEB"}};
+        function gpc(p){if(p>=100)return'full';if(p>=60)return'high';if(p>=30)return'mid';return'low'}
+        function setAutoDate(){
+            var now=new Date();
+            var arDays=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+            var enDays=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+            var enMonths=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            var toAr=function(n){return n.toString().replace(/[0-9]/g,function(d){return'٠١٢٣٤٥٦٧٨٩'[d]})};
+            // Gregorian
+            var gDay=enDays[now.getDay()],gDate=now.getDate(),gMon=enMonths[now.getMonth()];
+            document.getElementById('dateGregorian').textContent=gDay+' - '+gDate+' - '+gMon;
+            // Hijri using Intl
+            try{
+                var hijri=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',weekday:'long'}).format(now);
+                var parts=hijri.split(/[،,\s]+/).filter(function(p){return p.trim()});
+                // Extract hijri components
+                var hFull=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric'}).format(now);
+                var hMonth=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{month:'long'}).format(now);
+                var hYear=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric'}).format(now);
+                var arDay=arDays[now.getDay()];
+                document.getElementById('dateHijri').textContent=arDay+' - '+toAr(parseInt(hFull))+' - '+hMonth;
+                var hYearNum=hYear.replace(/[^٠-٩0-9]/g,'');
+                document.getElementById('dateHijriYear').textContent=hYearNum+' / '+now.getFullYear();
+            }catch(e){
+                document.getElementById('dateHijri').textContent=arDays[now.getDay()]+' - '+toAr(now.getDate());
+                document.getElementById('dateHijriYear').textContent=now.getFullYear()+'';
+            }
+        }
+        function render(data){
+            if(!data)data=DEFAULT_DATA;
+            var keys=Object.keys(data.sections);
+            for(var k=0;k<keys.length;k++){
+                var key=keys[k],c=document.getElementById('tasks-'+key);
+                if(!c)continue;
+                var s=data.sections[key];c.innerHTML='';
+                var card=document.getElementById('card-'+key);
+                if(card)card.querySelector('.card-title').textContent=s.title;
+                var tasks=s.tasks||[];
+                if(tasks.length===0){c.innerHTML='<div class="empty-state">لا توجد مهام</div>';continue}
+                for(var i=0;i<tasks.length;i++){
+                    var t=tasks[i];
+                    if(typeof t==='string')t={name:t,progress:0,assignee:'',status:''};
+                    var nm=t.name,pr=t.progress||0,cl=gpc(pr),asgn=t.assignee||'',st=t.status||'no-updates';
+                    var d=document.createElement('div');
+                    d.className='task-item'+(st==='done'?' completed':'');
+                    var metaHtml='<div class="task-meta">';
+                    if(asgn)metaHtml+='<span class="task-assignee">'+asgn+'</span>';
+                    if(st&&statusLabels[st])metaHtml+='<span class="task-status '+st+'">'+(statusLabels[st])+'</span>';
+                    metaHtml+='</div>';
+                    d.innerHTML='<div class="task-top"><span class="task-name">'+nm+'</span><div class="progress-wrapper"><div class="progress-bar-bg"><div class="progress-bar-fill '+cl+'" style="width:'+pr+'%"></div></div><span class="progress-percent '+cl+'">'+pr+'%</span></div></div>'+metaHtml;
+                    c.appendChild(d);
+                }
+            }
+            if(data.quote){document.getElementById('quoteTitle').textContent=data.quote.title||'';document.getElementById('quoteAuthor').textContent=data.quote.author||'';document.getElementById('quoteText').textContent=data.quote.text||''}
+            setAutoDate();
+            var fs=data.fontSizes||{quoteTitle:32,quoteAuthor:20,quoteText:16,sectionTitle:20,taskName:14};
+            document.getElementById('quoteTitle').style.fontSize=fs.quoteTitle+'px';
+            document.getElementById('quoteAuthor').style.fontSize=fs.quoteAuthor+'px';
+            document.getElementById('quoteText').style.fontSize=fs.quoteText+'px';
+            document.querySelectorAll('.card-title').forEach(function(el){el.style.fontSize=fs.sectionTitle+'px'});
+            document.querySelectorAll('.task-name').forEach(function(el){el.style.fontSize=fs.taskName+'px'});
+        }
+        db.ref('.info/connected').on('value',function(s){var e=document.getElementById('cs'),t=document.getElementById('ct');if(s.val()){e.className='conn-status on';t.textContent='متصل'}else{e.className='conn-status off';t.textContent='غير متصل'}});
+        var fl=true;
+        dataRef.on('value',function(snap){var d=snap.val();if(d){render(d)}else{dataRef.set(DEFAULT_DATA);render(DEFAULT_DATA)}if(fl){fl=false;setTimeout(function(){document.getElementById('loadingOverlay').classList.add('hidden')},400)}});
+        setTimeout(function(){if(fl){render(DEFAULT_DATA);document.getElementById('loadingOverlay').classList.add('hidden')}},5000);
+    </script>
+</body>
+</html>
